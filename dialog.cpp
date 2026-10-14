@@ -1,5 +1,9 @@
 #include "dialog.h"
 #include <QDebug>
+#include <QtPrintSupport/qprinter.h>
+#include <QtPrintSupport/qpagesetupdialog.h>
+#include <QtPrintSupport/QPrintDialog>
+#include <QtPrintSupport/QPrintPreviewDialog>
 Dialog::Dialog(QWidget *parent)//建構函數
     : QDialog(parent)
 {
@@ -69,6 +73,14 @@ void Dialog :: doPushBtn()//槽函數
             DisplayTextEdit->setPalette(palette);
         }
     }
+    if (btn == errorPushBtn)
+    {
+        QErrorMessage box(this);
+        box.setWindowTitle(QStringLiteral("錯誤訊息盒"));
+        // 只保留需要顯示的內容，或串接字串
+        box.showMessage(QStringLiteral("錯誤訊息盒實例xx = ..."));
+        box.exec();
+    }
     if(btn == filePushBtn){
         QString fileName = QFileDialog::getOpenFileName(this, "挑選檔案", ".", "All Files (*.*);;Text Files (*.txt)");
         if (!fileName.isEmpty()) {
@@ -76,5 +88,47 @@ void Dialog :: doPushBtn()//槽函數
         }
         /*Qstring fileName =QFileDialog::getSaveFileName(this,"儲存檔案",".");
         DisplayTextEdit->setText(fileName);*/
+    }
+    if(btn == fontPushBtn){
+        bool ok;
+        const QFont& font = QFontDialog::getFont(&ok,DisplayTextEdit->font(),this,QStringLiteral("字體對話盒"));
+        if(ok) DisplayTextEdit->setFont(font);
+    }
+    if (btn == inputPushBtn)
+    {
+        bool ok;
+        QString text = QInputDialog::getText(this, QStringLiteral("輸入對話盒"),QStringLiteral("輸入文字"),QLineEdit::Normal,QDir::home().dirName(),&ok);
+        if (ok && !text.isEmpty()) DisplayTextEdit->setText(text);
+    }
+    if (btn == pagePushBtn)
+    {
+        QPrinter printer(QPrinter::HighResolution);
+        QPageSetupDialog* dlg = new QPageSetupDialog(&printer, this);
+        dlg->setWindowTitle(QStringLiteral("頁面設定話方塊"));
+        if (dlg->exec() == QDialog::Accepted)
+        {
+
+        }
+    }
+    if (btn == printPushBtn)
+    {
+        QPrinter printer(QPrinter::HighResolution);
+        QPrintDialog dialog(&printer, this);
+        if (dialog.exec() != QDialog::Accepted)
+            return;
+    }
+
+    if(btn == progressPushBtn){
+        QProgressDialog progress("複製檔案中...","取消",0,99999,this);
+        progress.setWindowTitle("進度對話盒展示");
+        progress.show();
+        for(int i=0;i<=99999;i++){
+            progress.setValue(i);
+            qApp->processEvents();
+            if(progress.wasCanceled())
+                break;
+            qDebug() << i;
+        }
+        progress.setValue(99999);
     }
 }
